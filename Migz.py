@@ -1,5 +1,3 @@
-Old
-
 import time
 import RPi.GPIO as GPIO
 from rpi_ws281x import *
