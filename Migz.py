@@ -5,8 +5,8 @@ import RPi.GPIO as GPIO
 from rpi_ws281x import *
 
 # Import Motor and ADC classes from respective modules
-from Motor import Motor
-from ADC import Adc
+from Motor import *
+from ADC import *
 
 # Set up GPIO for buzzer
 GPIO.setwarnings(False)
@@ -29,10 +29,6 @@ strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, 
 strip.begin()
 
 class Light:
-    def __init__(self):
-        self.adc = Adc()
-        self.motor = Motor()
-        self.motor.setMotorModel(0, 0, 0, 0)
 
     def run(self):
         try:
