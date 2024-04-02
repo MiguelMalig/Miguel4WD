@@ -38,12 +38,16 @@ class Light:
                 R = self.adc.recvADC(1)
                 
                 # Check if there's light
+
                 if L < 2.99 and R < 2.99:
-                    self.PWM.setMotorModel(0,0,0,0)
+                    self.PWM.setMotorModel(600,600,600,600)
                      # Turn off buzzer
                     self.deactivate_buzzer()
                     # Blink red if no light
                     self.blink_red()
+                elif abs(L-R)<0.15:
+                    self.PWM.setMotorModel(0,0,0,0)
+
                 elif L > 3 or R > 3:
                     # Start rainbow animation and buzzer
                     self.theaterChaseRainbow(strip)
@@ -78,7 +82,7 @@ class Light:
                 for i in range(0, self.strip.numPixels(), 3):
                     self.strip.setPixelColor(i+q, 0)
                     
-    def theaterChaseRainbow(self,strip, wait_ms=50):
+    def theaterChaseRainbow(self,strip, wait_ms=0):
         # Rainbow movie theater light style chaser animation
         for j in range(256):
             for q in range(3):
