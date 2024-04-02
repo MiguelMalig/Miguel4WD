@@ -39,7 +39,7 @@ class Light:
                 
                 # Check if there's light
                 if L < 2.99 and R < 2.99:
-                    self.motor.setMotorModel(0, 0, 0, 0)
+                    self.PWM.setMotorModel(0, 0, 0, 0)
                     self.deactivate_buzzer()
                     # Blink red if no light
                     self.blink_red()
@@ -49,10 +49,10 @@ class Light:
                     self.activate_buzzer()
                     # if light left side
                     if L > R:
-                        self.motor.setMotorModel(-1200, -1200, 1400, 1400)
+                        self.PWM.setMotorModel(-1200, -1200, 1400, 1400)
                     # if light right side
                     elif R > L:
-                        self.motor.setMotorModel(1400, 1400, -1200, -1200)
+                        self.PWM.setMotorModel(1400, 1400, -1200, -1200)
 
         except KeyboardInterrupt:
             # On keyboard interrupt, stop the motor and clean up GPIO
