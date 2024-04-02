@@ -1,46 +1,72 @@
-# -*- coding: utf-8 -*-
 import time
+import RPi.GPIO as GPIO
 from rpi_ws281x import *
-from Motor import *
-from ADC import *
 
-# LED strip configuration:
-LED_COUNT = 8  # Number of LED pixels.
-LED_PIN = 18  # GPIO pin connected to the pixels (18 uses PWM!).
-LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
-LED_DMA = 10  # DMA channel to use for generating signal (try 10)
-LED_BRIGHTNESS = 255  # Set to 0 for darkest and 255 for brightest
-LED_INVERT = False  # True to invert the signal (when using NPN transistor level shift)
-LED_CHANNEL = 0  # set to '1' for GPIOs 13, 19, 41, 45, or 53
+# Import Motor and ADC classes from respective modules
+from Motor import Motor
+from ADC import Adc
 
-class Led:
+# Set up GPIO for buzzer
+GPIO.setwarnings(False)
+Buzzer_Pin = 17
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(Buzzer_Pin, GPIO.OUT)
+
+# LED strip configuration
+LED_COUNT = 8
+LED_PIN = 18
+LED_FREQ_HZ = 800000
+LED_DMA = 10
+LED_BRIGHTNESS = 255
+LED_INVERT = False
+LED_CHANNEL = 0
+
+# Initialize NeoPixel object
+strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
+strip.begin()
+
+class Light:
     def __init__(self):
-        self.ORDER = "GRB"  # Control the sending order of color data
-        # Create NeoPixel object with appropriate configuration.
-        self.strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT,
-                                        LED_BRIGHTNESS, LED_CHANNEL)
-        # Intialize the library (must be called once before other functions).
-        self.strip.begin()
+        self.adc = Adc()
+        self.motor = Motor()
+        self.motor.setMotorModel(0, 0, 0, 0)
 
-    def LED_TYPR(self, order, R_G_B):
-        B = R_G_B & 255
-        G = R_G_B >> 8 & 255
-        R = R_G_B >> 16 & 255
-        Led_type = ["GRB", "GBR", "RGB", "RBG", "BRG", "BGR"]
-        color = [Color(G, R, B), Color(G, B, R), Color(R, G, B), Color(R, B, G), Color(B, R, G), Color(B, G, R)]
-        if order in Led_type:
-            return color[Led_type.index(order)]
+    def run(self):
+        try:
+            while True:
+                L = self.adc.recvADC(0)
+                R = self.adc.recvADC(1)
+                
+                # Check if there's light
+                if L < 2.99 and R < 2.99:
+                    # Start rainbow animation and buzzer
+                    self.rainbow_animation()
+                    self.activate_buzzer()
+                else:
+                    # Turn off buzzer
+                    self.deactivate_buzzer()
 
-    def colorWipe(self, strip, color, wait_ms=50):
-        """Wipe color across display a pixel at a time."""
-        color = self.LED_TYPR(self.ORDER, color)
-        for i in range(self.strip.numPixels()):
-            self.strip.setPixelColor(i, color)
-            self.strip.show()
-            time.sleep(wait_ms / 1000.0)
+                    # Blink red if no light
+                    self.blink_red()
+
+        except KeyboardInterrupt:
+            # On keyboard interrupt, stop the motor
+            self.motor.setMotorModel(0, 0, 0, 0)
+
+    def activate_buzzer(self):
+        GPIO.output(Buzzer_Pin, True)
+
+    def deactivate_buzzer(self):
+        GPIO.output(Buzzer_Pin, False)
+
+    def rainbow_animation(self):
+        for j in range(256):
+            for i in range(strip.numPixels()):
+                strip.setPixelColor(i, self.wheel((i + j) & 255))
+            strip.show()
+            time.sleep(0.02)
 
     def wheel(self, pos):
-        """Generate rainbow colors across 0-255 positions."""
         if pos < 0 or pos > 255:
             r = g = b = 0
         elif pos < 85:
@@ -57,56 +83,21 @@ class Led:
             r = 0
             g = pos * 3
             b = 255 - pos * 3
-        return self.LED_TYPR(self.ORDER, Color(r, g, b))
+        return Color(r, g, b)
 
-    def rainbow(self, strip, wait_ms=20, iterations=1):
-        """Draw rainbow that fades across all pixels at once."""
-        for j in range(256 * iterations):
-            for i in range(self.strip.numPixels()):
-                self.strip.setPixelColor(i, self.wheel((i + j) & 255))
-            self.strip.show()
+    def blink_red(self):
+        for _ in range(5):
+            self.colorWipe(strip, Color(255, 0, 0))  # Red wipe
+            self.colorWipe(strip, Color(0, 0, 0), 10)  # Clear LEDs
+            time.sleep(0.5)
+
+    def colorWipe(self, strip, color, wait_ms=50):
+        for i in range(strip.numPixels()):
+            strip.setPixelColor(i, color)
+            strip.show()
             time.sleep(wait_ms / 1000.0)
-
-    def rainbowCycle(self, strip, wait_ms=20, iterations=5):
-        """Draw rainbow that uniformly distributes itself across all pixels."""
-        for j in range(256 * iterations):
-            for i in range(self.strip.numPixels()):
-                self.strip.setPixelColor(i, self.wheel((int(i * 256 / self.strip.numPixels()) + j) & 255))
-            self.strip.show()
-            time.sleep(wait_ms / 1000.0)
-
-    def theaterChaseRainbow(self, strip, wait_ms=50):
-        """Rainbow movie theater light style chaser animation."""
-        for j in range(256):
-            for q in range(3):
-                for i in range(0, self.strip.numPixels(), 3):
-                    self.strip.setPixelColor(i + q, self.wheel((i + j) % 255))
-                self.strip.show()
-                time.sleep(wait_ms / 1000.0)
-            for i in range(0, strip.numPixels(), 3):
-                strip.setPixelColor(i + q, 0)
-
-class Light:
-    def __init__(self):
-        self.adc = Adc()
-        self.PWM = Motor()
-        self.PWM.setMotorModel(0, 0, 0, 0)
-
-    def run(self):
-        try:
-            led = Led()
-            print('Program is starting ... ')
-            while True:
-                L = self.adc.recvADC(0)
-                R = self.adc.recvADC(1)
-                if L < 2.99 and R < 2.99:
-                    led.rainbow(led.strip)
-                    led.colorWipe(led.strip, Color(255, 255, 255))
-                else:
-                    led.colorWipe(led.strip, Color(255, 0, 0), 50)  # Red blink
-        except KeyboardInterrupt:
-            led.colorWipe(led.strip, Color(0, 0, 0), 10)
 
 if __name__ == '__main__':
-    light = Light()
-    light.run()
+    print('Program is starting ... ')
+    led_Car = Light()
+    led_Car.run()
