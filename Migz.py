@@ -51,7 +51,7 @@ class Light:
                     self.blink_red()
                 elif L > 3 or R > 3:
                     # Start rainbow animation and buzzer
-                    self.rainbow_animation()
+                    self.theaterChaseRainbow(self.strip)
                     self.activate_buzzer()
                     #if light left side
                     if L>R:
@@ -71,7 +71,19 @@ class Light:
     def deactivate_buzzer(self):
         GPIO.output(Buzzer_Pin, False)
 
-    def rainbow_animation(self):
+    def theaterChase(self,strip, color, wait_ms=50, iterations=10):
+        ##"""Movie theater light style chaser animation."""
+        color=self.LED_TYPR(self.ORDER,color)
+        for j in range(iterations):
+            for q in range(3):
+                for i in range(0,self.strip.numPixels(), 3):
+                    self.strip.setPixelColor(i+q, color)
+                self.strip.show()
+                time.sleep(wait_ms/1000.0)
+                for i in range(0, self.strip.numPixels(), 3):
+                    self.strip.setPixelColor(i+q, 0)
+                    
+    def theaterChaseRainbow(self,strip, wait_ms=50):
         #"""Rainbow movie theater light style chaser animation."""
         for j in range(256):
             for q in range(3):
