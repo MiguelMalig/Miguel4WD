@@ -33,7 +33,6 @@ class Light:
             self.adc=Adc()
             self.PWM=Motor()
             self.PWM.setMotorModel(0,0,0,0)
-
             while True:
                 L = self.adc.recvADC(0)
                 R = self.adc.recvADC(1)
@@ -50,15 +49,15 @@ class Light:
                     self.theaterChaseRainbow(strip)
                     self.activate_buzzer()
                     #if light left side
-                    if L>R:
+                    if L > R :
                         self.PWM.setMotorModel(-1200,-1200,1400,1400)
                     #if light right side
                     elif R > L :
-                         self.PWM.setMotorModel(1400,1400,-1200,-1200)
+                        self.PWM.setMotorModel(1400,1400,-1200,-1200)
 
         except KeyboardInterrupt:
             # On keyboard interrupt, stop the motor and clean up GPIO
-            self.motor.setMotorModel(0, 0, 0, 0)
+            led_Car.PWM.setMotorModel(0,0,0,0) 
             GPIO.cleanup()
 
     def activate_buzzer(self):
