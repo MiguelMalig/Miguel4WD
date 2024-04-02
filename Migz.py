@@ -50,8 +50,9 @@ class Light:
                     self.blink_red()
 
         except KeyboardInterrupt:
-            # On keyboard interrupt, stop the motor
+            # On keyboard interrupt, stop the motor and clean up GPIO
             self.motor.setMotorModel(0, 0, 0, 0)
+            GPIO.cleanup()
 
     def activate_buzzer(self):
         GPIO.output(Buzzer_Pin, True)
