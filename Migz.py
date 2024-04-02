@@ -6,7 +6,7 @@ from rpi_ws281x import *
 from Motor import *
 from ADC import *
 
-# Set up GPIO for buzzer
+# Set up GPIO for buzzer.
 GPIO.setwarnings(False)
 Buzzer_Pin = 17
 GPIO.setmode(GPIO.BCM)
