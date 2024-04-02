@@ -28,8 +28,8 @@ strip.begin()
 class Light:
     def __init__(self):
         self.adc = Adc()
-        self.motor = Motor()
-        self.motor.setMotorModel(0, 0, 0, 0)
+        self.PWM = Motor()
+        self.PWM.setMotorModel(0, 0, 0, 0)
 
     def run(self):
         try:
@@ -39,7 +39,7 @@ class Light:
                 
                 # Check if there's light
                 if L < 2.99 and R < 2.99:
-                    self.PWM.setMotorModel(0, 0, 0, 0)
+                    self.PWM.setMotorModel(0,0,0,0)
                     self.deactivate_buzzer()
                     # Blink red if no light
                     self.blink_red()
@@ -49,10 +49,10 @@ class Light:
                     self.activate_buzzer()
                     # if light left side
                     if L > R:
-                        self.PWM.setMotorModel(-1200, -1200, 1400, 1400)
+                        self.PWM.setMotorModel(-1200,-1200,1400,1400)
                     # if light right side
                     elif R > L:
-                        self.PWM.setMotorModel(1400, 1400, -1200, -1200)
+                        self.PWM.setMotorModel(1400,1400,-1200,-1200)
 
         except KeyboardInterrupt:
             # On keyboard interrupt, stop the motor and clean up GPIO
