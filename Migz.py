@@ -12,14 +12,15 @@ Buzzer_Pin = 17
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(Buzzer_Pin, GPIO.OUT)
 
-# LED strip configuration
-LED_COUNT = 8
-LED_PIN = 18
-LED_FREQ_HZ = 800000
-LED_DMA = 10
-LED_BRIGHTNESS = 255
-LED_INVERT = False
-LED_CHANNEL = 0
+# LED strip configuration:
+LED_COUNT = 8 # Number of LED pixels.
+LED_PIN = 18 # GPIO pin connected to the pixels (18 uses PWM!).
+LED_FREQ_HZ = 800000 # LED signal frequency in hertz (usually 800khz)
+LED_DMA = 10 # DMA channel to use for generating signal (try 10)
+LED_BRIGHTNESS = 255 # Set to 0 for darkest and 255 for brightest
+LED_INVERT = False # True to invert the signal (when using NPN transistor level shift)
+LED_CHANNEL = 0 # set to '1' for GPIOs 13, 19, 41, 45 or 53
+
 
 # Initialize NeoPixel object
 strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
@@ -33,21 +34,30 @@ class Light:
 
     def run(self):
         try:
+            self.adc=Adc()
+            self.PWM=Motor()
+            self.PWM.setMotorModel(0,0,0,0)
+
             while True:
                 L = self.adc.recvADC(0)
                 R = self.adc.recvADC(1)
                 
                 # Check if there's light
                 if L < 2.99 and R < 2.99:
+                     # Turn off buzzer
+                    self.deactivate_buzzer()
+                    # Blink red if no light
+                    self.blink_red()
+                elif L > 3 or R > 3:
                     # Start rainbow animation and buzzer
                     self.rainbow_animation()
                     self.activate_buzzer()
-                else:
-                    # Turn off buzzer
-                    self.deactivate_buzzer()
-
-                    # Blink red if no light
-                    self.blink_red()
+                    #if light left side
+                    if L>R:
+                        self.PWM.setMotorModel(-1200,-1200,1400,1400)
+                    #if light right side
+                    elif R > L :
+                         self.PWM.setMotorModel(1400,1400,-1200,-1200)
 
         except KeyboardInterrupt:
             # On keyboard interrupt, stop the motor and clean up GPIO
